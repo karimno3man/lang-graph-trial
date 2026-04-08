@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Executive AI Suite</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0c0c0f;
+      --surface: #13131a;
+      --surface2: #1a1a24;
+      --border: #2a2a3a;
+      --text: #e8e8f0;
+      --muted: #6b6b85;
+      --cfo: #d4a853;
+      --cto: #5b8ef0;
+      --sales: #7ecf8e;
+      --accent: #ffffff;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 20px 32px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      background: var(--surface);
+    }
+
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: var(--accent);
+    }
+
+    .logo span { color: var(--muted); font-weight: 400; font-size: 0.9rem; margin-left: 12px; font-family: 'DM Mono', monospace; }
+
+    .personas {
+      display: flex;
+      gap: 10px;
+    }
+
+    .persona-badge {
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid;
+      opacity: 0.45;
+      transition: opacity 0.3s, transform 0.2s;
+    }
+
+    .persona-badge.cfo  { color: var(--cfo);   border-color: var(--cfo); }
+    .persona-badge.cto  { color: var(--cto);   border-color: var(--cto); }
+    .persona-badge.sales { color: var(--sales); border-color: var(--sales); }
+    .persona-badge.active { opacity: 1; transform: scale(1.05); }
+
+    /* ── Chat Area ── */
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      scroll-behavior: smooth;
+    }
+
+    #chat::-webkit-scrollbar { width: 4px; }
+    #chat::-webkit-scrollbar-track { background: transparent; }
+    #chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* Empty state */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .empty-state h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .empty-state p { font-size: 0.9rem; max-width: 400px; line-height: 1.7; }
+
+    .suggestion-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 8px;
+    }
+
+    .chip {
+      padding: 8px 16px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--surface);
+      font-family: 'DM Mono', monospace;
+    }
+
+    .chip:hover { border-color: var(--accent); color: var(--accent); background: var(--surface2); }
+
+    /* Messages */
+    .msg {
+      display: flex;
+      gap: 14px;
+      max-width: 780px;
+      animation: fadeUp 0.3s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+      border: 1px solid;
+    }
+
+    .avatar.user-av  { background: var(--surface2); border-color: var(--border); color: var(--muted); }
+    .avatar.cfo-av   { background: rgba(212,168,83,0.12); border-color: var(--cfo); color: var(--cfo); }
+    .avatar.cto-av   { background: rgba(91,142,240,0.12); border-color: var(--cto); color: var(--cto); }
+    .avatar.sales-av { background: rgba(126,207,142,0.12); border-color: var(--sales); color: var(--sales); }
+
+    .bubble {
+      padding: 14px 18px;
+      border-radius: 14px;
+      line-height: 1.7;
+      font-size: 0.9rem;
+      max-width: 640px;
+    }
+
+    .msg.user .bubble {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-top-right-radius: 4px;
+    }
+
+    .msg.assistant .bubble {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top-left-radius: 4px;
+    }
+
+    .persona-tag {
+      font-size: 0.65rem;
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .persona-tag.cfo   { color: var(--cfo); }
+    .persona-tag.cto   { color: var(--cto); }
+    .persona-tag.sales { color: var(--sales); }
+
+    /* Typing indicator */
+    .typing-bubble {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 16px 18px;
+    }
+
+    .dot {
+      width: 7px; height: 7px;
+      background: var(--muted);
+      border-radius: 50%;
+      animation: blink 1.2s infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes blink {
+      0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+      40% { opacity: 1; transform: scale(1); }
+    }
+
+    /* ── Input Area ── */
+    .input-area {
+      padding: 20px 32px 28px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      transition: border-color 0.2s;
+    }
+
+    .input-row:focus-within { border-color: var(--muted); }
+
+    #userInput {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      resize: none;
+      max-height: 120px;
+      line-height: 1.6;
+    }
+
+    #userInput::placeholder { color: var(--muted); }
+
+    #sendBtn {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      border: none;
+      background: var(--accent);
+      color: var(--bg);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s, transform 0.15s;
+      flex-shrink: 0;
+    }
+
+    #sendBtn:hover { opacity: 0.85; transform: scale(1.05); }
+    #sendBtn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+    .input-hint {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 8px;
+      text-align: center;
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* New chat button */
+    .new-chat-btn {
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--muted);
+      border-radius: 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.05em;
+    }
+    .new-chat-btn:hover { border-color: var(--accent); color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Executive Suite <span>/ AI Advisor</span></div>
+  <div style="display:flex; align-items:center; gap:16px;">
+    <div class="personas">
+      <div class="persona-badge cfo"  id="badge-cfo">CFO</div>
+      <div class="persona-badge cto"  id="badge-cto">CTO</div>
+      <div class="persona-badge sales" id="badge-sales">GTM / Sales</div>
+    </div>
+    <button class="new-chat-btn" onclick="newChat()">+ New Chat</button>
+  </div>
+</header>
+
+<div id="chat">
+  <div class="empty-state" id="emptyState">
+    <h2>Ask your executive team</h2>
+    <p>Your message will be automatically routed to the right advisor — CFO, CTO, or Business Dev.</p>
+    <div class="suggestion-chips">
+      <div class="chip" onclick="sendSuggestion(this)">What's our projected burn rate?</div>
+      <div class="chip" onclick="sendSuggestion(this)">Best stack for a real-time app?</div>
+      <div class="chip" onclick="sendSuggestion(this)">How do we improve our sales pipeline?</div>
+      <div class="chip" onclick="sendSuggestion(this)">Should we raise a Series A?</div>
+    </div>
+  </div>
+</div>
+
+<div class="input-area">
+  <div class="input-row">
+    <textarea id="userInput" rows="1" placeholder="Ask anything — finance, tech, or growth..."></textarea>
+    <button id="sendBtn" onclick="sendMessage()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"></line>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+      </svg>
+    </button>
+  </div>
+  <div class="input-hint">Auto-routes to CFO · CTO · GTM/Sales · Memory enabled per session</div>
+</div>
+
+<script>
+  const threadId = crypto.randomUUID();
+  let isLoading = false;
+
+  const chat = document.getElementById('chat');
+  const input = document.getElementById('userInput');
+  const sendBtn = document.getElementById('sendBtn');
+
+  // Auto-resize textarea
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  function sendSuggestion(el) {
+    input.value = el.textContent;
+    sendMessage();
+  }
+
+  function newChat() {
+    location.reload();
+  }
+
+  function hideEmpty() {
+    const empty = document.getElementById('emptyState');
+    if (empty) empty.remove();
+  }
+
+  function setActiveBadge(persona) {
+    ['cfo','cto','sales'].forEach(p => {
+      document.getElementById('badge-'+p).classList.toggle('active', p === persona);
+    });
+  }
+
+  function addUserMessage(text) {
+    hideEmpty();
+    const div = document.createElement('div');
+    div.className = 'msg user';
+    div.innerHTML = `
+      <div class="avatar user-av">YOU</div>
+      <div class="bubble">${escapeHtml(text)}</div>
+    `;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function addTypingIndicator() {
+    const div = document.createElement('div');
+    div.className = 'msg assistant';
+    div.id = 'typing';
+    div.innerHTML = `
+      <div class="avatar cfo-av" style="opacity:0.4">···</div>
+      <div class="bubble typing-bubble">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+    `;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function removeTyping() {
+    const t = document.getElementById('typing');
+    if (t) t.remove();
+  }
+
+  function addAssistantMessage(text, persona, label) {
+    const avatarClass = persona + '-av';
+    const avatarText = persona === 'sales' ? 'GTM' : persona.toUpperCase();
+    const div = document.createElement('div');
+    div.className = 'msg assistant';
+    div.innerHTML = `
+      <div class="avatar ${avatarClass}">${avatarText}</div>
+      <div>
+        <div class="persona-tag ${persona}">${label}</div>
+        <div class="bubble">${escapeHtml(text)}</div>
+      </div>
+    `;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    setActiveBadge(persona);
+  }
+
+  function escapeHtml(text) {
+    return text
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/\n/g,'<br>');
+  }
+
+  async function sendMessage() {
+    const text = input.value.trim();
+    if (!text || isLoading) return;
+
+    isLoading = true;
+    sendBtn.disabled = true;
+    input.value = '';
+    input.style.height = 'auto';
+
+    addUserMessage(text);
+    addTypingIndicator();
+
+    try {
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, thread_id: threadId })
+      });
+
+      const data = await res.json();
+      removeTyping();
+      addAssistantMessage(data.reply, data.persona, data.persona_label);
+    } catch (err) {
+      removeTyping();
+      addAssistantMessage('Something went wrong. Make sure the server is running.', 'cfo', 'Error');
+    }
+
+    isLoading = false;
+    sendBtn.disabled = false;
+    input.focus();
+  }
+</script>
+</body>
+</html>
